@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Панель команд</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            font-family: monospace;
+            background: linear-gradient(135deg, #0f0f0f, #1a1a1a);
+            color: #00ff88;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .container {
+            width: 850px;
+            height: 85vh;
+            background: #111;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 25px #00ff8855;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .output {
+            flex: 1;
+            background: black;
+            padding: 20px;
+            border-radius: 10px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            border: 1px solid #00ff88;
+            font-size: 1.05em;
+            white-space: pre-line;
+        }
+
+        .input-area {
+            display: flex;
+        }
+
+        input {
+            flex: 1;
+            padding: 10px;
+            background: black;
+            border: 1px solid #00ff88;
+            color: #00ff88;
+            outline: none;
+            font-family: monospace;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: #00ff88;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background: #00cc6a;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="output" id="output">
+            Добро пожаловать в Kubit!
+            Для списка команд введите <b>help</b>.
+        </div>
+
+        <div class="input-area">
+            <input type="text" id="commandInput" placeholder="Введите команду...">
+            <button id="enterBtn">Enter</button>
+        </div>
+    </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+    const output = document.getElementById("output");
+    const input = document.getElementById("commandInput");
+    const enterBtn = document.getElementById("enterBtn");
+    const body = document.body;
+
+    const commands = [
+        {cmd: "help", desc: "список команд"},
+        {cmd: "clear", desc: "очистить консоль"},
+        {cmd: "null", desc: "выводит 'Null is me'"},
+        {cmd: "pl", desc: "популярные языки программирования"},
+        {cmd: "ppl", desc: "выводит сообщение от PWgood"},
+        {cmd: "yt", desc: "получить название и автора YouTube по ссылке"},
+        {cmd: "time", desc: "показать текущее время"},
+        {cmd: "date", desc: "показать текущую дату"},
+        {cmd: "calc", desc: "калькулятор (пример: calc 2+2)"},
+        {cmd: "history", desc: "показать историю команд"},
+        {cmd: "theme", desc: "сменить тему (пример: theme red)"},
+        {cmd: "uptime", desc: "показать время работы страницы"},
+        {cmd: "rand", desc: "генерирует случайное число (пример: rand 1 100)"},
+        {cmd: "hack", desc: "фейковый взлом"},
+        {cmd: "search", desc: "поиск по google"}
+    ];
+
+    let ytMode = false;
+
+    let commandHistory = [];
+    let historyIndex = 0;
+    let tempInput = "";
+
+    // для uptime
+    const pageLoadTime = Date.now();
+
+    // Отправка команды
+    function executeCommand() {
+        let cmd = input.value.trim();
+        if (!cmd) return;
+
+        output.innerHTML += "\n> " + cmd;
+
+        commandHistory.push(cmd);
+        historyIndex = commandHistory.length;
+
+        if (ytMode) {
+            ytMode = false;
+            handleYouTube(cmd);
+            input.value = "";
+            return;
+        }
+
+        const parts = cmd.split(" ");
+        const baseCommand = parts[0].toLowerCase();
+        const args = parts.slice(1);
+
+        switch(baseCommand) {
+            case "help":
+                output.innerHTML += "\nДоступные команды:\n";
+                commands.forEach(c => {
+                    output.innerHTML += `${c.cmd} - ${c.desc}\n`;
+                });
+                break;
+            case "clear":
+                output.innerHTML = "";
+                break;
+            case "null":
+                output.innerHTML += "\nNull is me";
+                break;
+            case "pl":
+                output.innerHTML += "\nПопулярные языки программирования:\n";
+                commands.forEach(c => {
+                    output.innerHTML += `${c.cmd} - ${c.desc}\n`;
+                });
+                break;
+            case "ppl":
+                output.innerHTML += "\nЭто лучший сервер от лучшего стримера PWgood!";
+                break;
+            case "yt":
+                output.innerHTML += "\nВведите ссылку на видео YouTube:";
+                ytMode = true;
+                break;
+            case "time":
+                const nowTime = new Date();
+                output.innerHTML += "\nТекущее время: " + nowTime.toLocaleTimeString();
+                break;
+            case "date":
+                const nowDate = new Date();
+                output.innerHTML += "\nСегодня: " + nowDate.toLocaleDateString();
+                break;
+            case "calc":
+                if (args.length === 0) {
+                    output.innerHTML += "\nВведите выражение. Пример: calc 2+2";
+                } else {
+                    try {
+                        const expression = args.join(" ");
+                        const result = eval(expression);
+                        output.innerHTML += "\nРезультат: " + result;
+                    } catch {
+                        output.innerHTML += "\nОшибка в выражении.";
+                    }
+                }
+                break;
+            case "history":
+                if (commandHistory.length === 0) {
+                    output.innerHTML += "\nИстория пуста.";
+                } else {
+                    output.innerHTML += "\nИстория команд:\n";
+                    commandHistory.forEach((c, index) => {
+                        output.innerHTML += `${index + 1}: ${c}\n`;
+                    });
+                }
+                break;
+            case "theme":
+                if (args.length === 0) {
+                    output.innerHTML += "\nПосле команды theme укажите цвет (green, red, blue, matrix).";
+                } else {
+                    changeTheme(args[0].toLowerCase());
+                }
+                break;
+            case "uptime":
+                const diff = Date.now() - pageLoadTime;
+                const seconds = Math.floor(diff / 1000);
+                const minutes = Math.floor(seconds / 60);
+                const hours = Math.floor(minutes / 60);
+                output.innerHTML += `\nСистема работает: ${hours} ч ${minutes % 60} мин ${seconds % 60} сек`;
+                break;
+            case "rand":
+                if (args.length < 2) {
+                    output.innerHTML += "\nИспользование: rand <min> <max>";
+                } else {
+                    const min = parseInt(args[0]);
+                    const max = parseInt(args[1]);
+                    if (isNaN(min) || isNaN(max) || min > max) {
+                        output.innerHTML += "\nНеверный диапазон. Пример: rand 1 100";
+                    } else {
+                        const num = Math.floor(Math.random() * (max - min + 1)) + min;
+                        output.innerHTML += `\nСлучайное число: ${num}`;
+                    }
+                }
+                break;
+            case "hack":
+                output.innerHTML += "\nПодключение...\nОбход защиты...\nДоступ получен.";
+                break;
+            default:
+                output.innerHTML += "\nКоманда не распознана.";
+            case "search":
+                if (args.length === 0) {
+                    output.innerHTML += "\nВведите запрос для поиска.";
+                } else {
+                    const query = args.join(" ");
+                    const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+                output.innerHTML += `\nРезультаты поиска: ${searchUrl}`;
+    }
+    break;
+        }
+
+        // Автоматически прокручиваем вниз, чтобы была видна последняя команда
+        output.scrollTop = output.scrollHeight;
+
+        input.value = "";
+    }
+
+    // Обработчик кнопки "Enter"
+    input.addEventListener("keydown", function(event) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            executeCommand();
+        }
+    });
+
+    // Обработчик кнопки "Enter" через кнопку
+    enterBtn.addEventListener("click", function () {
+        executeCommand();
+    });
+
+    function changeTheme(color) {
+        switch (color) {
+            case "green":
+                body.style.background = "linear-gradient(135deg, #0f0f0f, #1a1a1a)";
+                break;
+            case "red":
+                body.style.background = "linear-gradient(135deg, #1a0000, #330000)";
+                break;
+            case "blue":
+                body.style.background = "linear-gradient(135deg, #00008b, #1e3a5d)";
+                break;
+            case "matrix":
+                body.style.background = "linear-gradient(135deg, #00ff00, #00cc00)";
+                break;
+            default:
+                body.style.background = "linear-gradient(135deg, #0f0f0f, #1a1a1a)";
+        }
+    }
+});
+</script>
+</body>
+</html>
